@@ -6,3 +6,4 @@ do
         out) outputPt=${OPTARG};;
     esac
 done
+./SubProcesses/P1_Sigma_sm_gg_ttxggg/runner.exe "-lhe=$lhePt -rwgt=$rePt -out=$outputPt"; 
