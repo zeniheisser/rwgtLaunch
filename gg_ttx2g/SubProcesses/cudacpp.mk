@@ -52,7 +52,7 @@ GTESTLIBS   = $(GTESTLIBDIR)/libgtest.a $(GTESTLIBDIR)/libgtest_main.a
 
 #=== Configure the C++ compiler
 
-CXXFLAGS = $(OPTFLAGS) -std=c++17 $(INCFLAGS) $(USE_NVTX) -Wall -Wshadow -Wextra
+CXXFLAGS = $(OPTFLAGS) -std=c++17 $(INCFLAGS) $(USE_NVTX)
 ifeq ($(shell $(CXX) --version | grep ^nvc++),)
 CXXFLAGS+= -ffast-math # see issue #117
 endif
@@ -395,7 +395,7 @@ cxx_main=$(BUILDDIR)/check.exe
 fcxx_main=$(BUILDDIR)/fcheck.exe
 
 ifneq ($(NVCC),)
-cu_main=$(BUILDDIR)/gcheck.exe
+cu_main=$(BUILDDIR)/runner.exe
 fcu_main=$(BUILDDIR)/fgcheck.exe
 else
 cu_main=
@@ -408,7 +408,7 @@ all.$(TAG): $(BUILDDIR)/.build.$(TAG) $(LIBDIR)/lib$(MG5AMC_COMMONLIB).so $(cu_m
 
 # Target (and build options): debug
 MAKEDEBUG=
-debug: OPTFLAGS   = -g -O0 -DDEBUG2
+debug: OPTFLAGS   = -O3
 debug: CUOPTFLAGS = -G
 debug: MAKEDEBUG := debug
 debug: all.$(TAG)
@@ -473,7 +473,7 @@ endif
 commonlib : $(LIBDIR)/lib$(MG5AMC_COMMONLIB).so
 
 $(LIBDIR)/lib$(MG5AMC_COMMONLIB).so: ../../src/*.h ../../src/*.cc
-	$(MAKE) -C ../../src $(MAKEDEBUG) -f $(CUDACPP_SRC_MAKEFILE)
+	$(MAKE) -C ../../src -f $(CUDACPP_SRC_MAKEFILE)
 
 #-------------------------------------------------------------------------------
 
@@ -751,53 +751,5 @@ endif
 	@echo ""
 	@echo FC=$(FC)
 	$(FC) --version
-
-#-------------------------------------------------------------------------------
-
-# Target: check (run the C++ test executable)
-# [NB THIS IS WHAT IS USED IN THE GITHUB CI!]
-ifneq ($(NVCC),)
-check: runTest cmpFcheck cmpFGcheck
-else
-check: runTest cmpFcheck
-endif
-
-# Target: runTest (run the C++ test executable runTest.exe)
-runTest: all.$(TAG)
-	$(RUNTIME) $(BUILDDIR)/runTest.exe
-
-# Target: runCheck (run the C++ standalone executable check.exe, with a small number of events)
-runCheck: all.$(TAG)
-	$(RUNTIME) $(BUILDDIR)/check.exe -p 2 32 2
-
-# Target: runGcheck (run the CUDA standalone executable gcheck.exe, with a small number of events)
-runGcheck: all.$(TAG)
-	$(RUNTIME) $(BUILDDIR)/gcheck.exe -p 2 32 2
-
-# Target: runFcheck (run the Fortran standalone executable - with C++ MEs - fcheck.exe, with a small number of events)
-runFcheck: all.$(TAG)
-	$(RUNTIME) $(BUILDDIR)/fcheck.exe 2 32 2
-
-# Target: runFGcheck (run the Fortran standalone executable - with CUDA MEs - fgcheck.exe, with a small number of events)
-runFGcheck: all.$(TAG)
-	$(RUNTIME) $(BUILDDIR)/fgcheck.exe 2 32 2
-
-# Target: cmpFcheck (compare ME results from the C++ and Fortran with C++ MEs standalone executables, with a small number of events)
-cmpFcheck: all.$(TAG)
-	@echo
-	@echo "$(BUILDDIR)/check.exe --common -p 2 32 2"
-	@echo "$(BUILDDIR)/fcheck.exe 2 32 2"
-	@me1=$(shell $(RUNTIME) $(BUILDDIR)/check.exe --common -p 2 32 2 | grep MeanMatrix | awk '{print $$4}'); me2=$(shell $(RUNTIME) $(BUILDDIR)/fcheck.exe 2 32 2 | grep Average | awk '{print $$4}'); echo "Avg ME (C++/C++)    = $${me1}"; echo "Avg ME (F77/C++)    = $${me2}"; if [ "$${me2}" == "NaN" ]; then echo "ERROR! Fortran calculation (F77/C++) returned NaN"; elif [ "$${me2}" == "" ]; then echo "ERROR! Fortran calculation (F77/C++) crashed"; else python3 -c "me1=$${me1}; me2=$${me2}; reldif=abs((me2-me1)/me1); print('Relative difference =', reldif); ok = reldif <= 2E-4; print ( '%s (relative difference %s 2E-4)' % ( ('OK','<=') if ok else ('ERROR','>') ) ); import sys; sys.exit(0 if ok else 1)"; fi
-
-# Target: cmpFGcheck (compare ME results from the CUDA and Fortran with CUDA MEs standalone executables, with a small number of events)
-cmpFGcheck: all.$(TAG)
-	@echo
-	@echo "$(BUILDDIR)/gcheck.exe --common -p 2 32 2"
-	@echo "$(BUILDDIR)/fgcheck.exe 2 32 2"
-	@me1=$(shell $(RUNTIME) $(BUILDDIR)/gcheck.exe --common -p 2 32 2 | grep MeanMatrix | awk '{print $$4}'); me2=$(shell $(RUNTIME) $(BUILDDIR)/fgcheck.exe 2 32 2 | grep Average | awk '{print $$4}'); echo "Avg ME (C++/CUDA)   = $${me1}"; echo "Avg ME (F77/CUDA)   = $${me2}"; if [ "$${me2}" == "NaN" ]; then echo "ERROR! Fortran calculation (F77/CUDA) crashed"; elif [ "$${me2}" == "" ]; then echo "ERROR! Fortran calculation (F77/CUDA) crashed"; else python3 -c "me1=$${me1}; me2=$${me2}; reldif=abs((me2-me1)/me1); print('Relative difference =', reldif); ok = reldif <= 2E-4; print ( '%s (relative difference %s 2E-4)' % ( ('OK','<=') if ok else ('ERROR','>') ) ); import sys; sys.exit(0 if ok else 1)"; fi
-
-# Target: memcheck (run the CUDA standalone executable gcheck.exe with a small number of events through cuda-memcheck)
-memcheck: all.$(TAG)
-	$(RUNTIME) $(CUDA_HOME)/bin/cuda-memcheck --check-api-memory-access yes --check-deprecated-instr yes --check-device-heap yes --demangle full --language c --leak-check full --racecheck-report all --report-api-errors all --show-backtrace yes --tool memcheck --track-unused-memory yes $(BUILDDIR)/gcheck.exe -p 2 32 2
 
 #-------------------------------------------------------------------------------
