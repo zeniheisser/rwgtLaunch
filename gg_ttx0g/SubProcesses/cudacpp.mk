@@ -42,12 +42,6 @@ INCFLAGS += -I../../src
 # Dependency on tools directory
 TOOLSDIR = ../../../../../tools
 INCFLAGS += -I$(TOOLSDIR)
-
-# Dependency on test directory
-TESTDIR  = ../../../../../test
-GTESTLIBDIR = $(TESTDIR)/googletest/build/lib/
-GTESTLIBS   = $(GTESTLIBDIR)/libgtest.a $(GTESTLIBDIR)/libgtest_main.a
-
 #-------------------------------------------------------------------------------
 
 #=== Configure the C++ compiler
@@ -402,9 +396,8 @@ cu_main=
 fcu_main=
 endif
 
-testmain=$(BUILDDIR)/runTest.exe
 
-all.$(TAG): $(BUILDDIR)/.build.$(TAG) $(LIBDIR)/lib$(MG5AMC_COMMONLIB).so $(cu_main) $(cxx_main) $(testmain) $(fcu_main) $(fcxx_main)
+all.$(TAG): $(BUILDDIR)/.build.$(TAG) $(LIBDIR)/lib$(MG5AMC_COMMONLIB).so $(cu_main) $(cxx_main) $(fcu_main) $(fcxx_main)
 
 # Target (and build options): debug
 MAKEDEBUG=
