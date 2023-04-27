@@ -202,8 +202,6 @@ int main( int argc, char** argv ){
 
     if( fileCol.getLhe()->events[0]->getPrts().size() != mgOnGpu::npar ){
         throw std::runtime_error("Number of external particles in input LHE file differs from nimber of external particles for this process -- process mismatch.");
-    } else{
-        std::cout << "\n\n\nnPrts is " << fileCol.getLhe()->events[0]->getPrts().size() << " and npar is " << mgOnGpu::npar << "\n\n\n\n";
     }
     
     auto bridgeCont = fbridgeRunner( fileCol.getLhe() );

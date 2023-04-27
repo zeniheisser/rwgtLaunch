@@ -58,13 +58,13 @@ SLHAReader::read_slha_file( std::string file_name, bool verbose )
     }
     else
     {
-      std::cout << "WARNING! Card file '" << file_name << "' does not exist:"
-                << " look for the file in directory $" << envpath << "='" << getenv( envpath ) << "'" << std::endl;
+      //std::cout << "WARNING! Card file '" << file_name << "' does not exist:"
+      //          << " look for the file in directory $" << envpath << "='" << getenv( envpath ) << "'" << std::endl;
       const std::string file_name2 = std::filesystem::path( getenv( envpath ) ) / std::filesystem::path( file_name ).filename();
       param_card.open( file_name2.c_str(), std::ifstream::in );
       if( param_card.good() )
       {
-        std::cout << "Opened slha file " << file_name2 << " for reading" << std::endl;
+        //std::cout << "Opened slha file " << file_name2 << " for reading" << std::endl;
       }
       else
       {
