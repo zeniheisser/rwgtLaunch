@@ -5,7 +5,7 @@
 #include <unistd.h>
 #define GetCurrentDir getcwd
 #endif
-#include "PEPPER.hpp"
+#include "teawREX.hpp"
 #include "fbridge.cc"
 #include <cstdlib>
 #include <typeinfo>
@@ -30,7 +30,7 @@ struct fbridgeRunner{
     int fauxNEvt;
     int nPar;
     fbridgeRunner(){}
-    fbridgeRunner( PEP::lheNode& lheFile ){
+    fbridgeRunner( REX::lheNode& lheFile ){
         if( !lheFile.isParsed() ){ lheFile.deepParse(); }
         nEvt = lheFile.events.size();
         nWarpRemain = (32 - ( nEvt % 32 )) % 32;
@@ -41,7 +41,7 @@ struct fbridgeRunner{
         selCol = std::vector<int>( fauxNEvt, 0 );
         nPar = lheFile.events[0]->getPrts().size();
     }
-    fbridgeRunner( std::shared_ptr<PEP::lheNode> lheFile ){
+    fbridgeRunner( std::shared_ptr<REX::lheNode> lheFile ){
         if(!lheFile->isParsed() ){ lheFile->deepParse(); }
         nEvt = lheFile->events.size();
         nWarpRemain = (32 - ( nEvt % 32 )) % 32;
@@ -196,7 +196,7 @@ int main( int argc, char** argv ){
     }
     
 
-    PEP::PER::rwgtFiles fileCol( lheFilePath, slhaPath, rwgtCardPath );
+    REX::teaw::rwgtFiles fileCol( lheFilePath, slhaPath, rwgtCardPath );
     fileCol.initCards();
 
 
@@ -210,7 +210,7 @@ int main( int argc, char** argv ){
     [&bridgeCont](std::vector<double>& momenta, std::vector<double>& alphaS) {
         return bridgeCont.scatAmp(momenta, alphaS);
     };
-    PEP::PER::rwgtRunner nuRun( fileCol, scatteringAmplitude );
+    REX::teaw::rwgtRunner nuRun( fileCol, scatteringAmplitude );
 
 
     nuRun.runRwgt( outputPath ); 
